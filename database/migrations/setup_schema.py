@@ -3,8 +3,9 @@ import psycopg2
 from app.text_2_sql.config import Config
 from urllib.parse import urlparse
 
+
 def get_connection():
- 
+
     if not Config.SUPABASE_URL or not Config.SUPABASE_DB_PASSWORD:
         raise ValueError("Missing SUPABASE_URL or SUPABASE_DB_PASSWORD in .env")
 

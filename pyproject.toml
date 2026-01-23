@@ -7,11 +7,11 @@ requires-python = ">=3.12"
 dependencies = [
     "kagglehub>=0.4.0",
     "langgraph",
-    "google-generativeai",
     "supabase",
     "pandas",
     "streamlit",
     "python-dotenv",
     "plotly",
     "psycopg2-binary",
+    "google-genai>=1.60.0",
 ]
