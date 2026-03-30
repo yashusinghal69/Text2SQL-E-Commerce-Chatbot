@@ -16,33 +16,48 @@ class PostgresClient:
     _instance = None
     _pool = None
     _executor = ThreadPoolExecutor(max_workers=10)
+    _initialized = False
     
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(PostgresClient, cls).__new__(cls)
-            cls._instance._initialize()
         return cls._instance
     
-    def _initialize(self):
+    def _ensure_initialized(self):
+        """Lazy initialization - connect only when first query is executed"""
+        if self._initialized:
+            return
+        
         if not Config.SUPABASE_URL or not Config.SUPABASE_DB_PASSWORD:
             raise ValueError("SUPABASE_URL or SUPABASE_DB_PASSWORD not found in environment variables")
         
-        parsed_url = urlparse(Config.SUPABASE_URL)
-        project_ref = parsed_url.netloc.split('.')[0]
-        
-        user = f"postgres.{project_ref}"
-        host = "aws-1-ap-south-1.pooler.supabase.com"
-        conn_str = f"postgresql://{user}:{Config.SUPABASE_DB_PASSWORD}@{host}:5432/postgres"
-        
-        self._pool = ThreadedConnectionPool(
-            minconn=1,
-            maxconn=20,
-            dsn=conn_str
-        )
-        
-        logger.info("PostgreSQL connection pool initialized")
+        try:
+            parsed_url = urlparse(Config.SUPABASE_URL)
+            project_ref = parsed_url.netloc.split('.')[0]
+            
+            user = f"postgres.{project_ref}"
+            host = "aws-1-ap-south-1.pooler.supabase.com"
+            conn_str = f"postgresql://{user}:{Config.SUPABASE_DB_PASSWORD}@{host}:5432/postgres"
+            
+            self._pool = ThreadedConnectionPool(
+                minconn=1,
+                maxconn=20,
+                dsn=conn_str
+            )
+            
+            self._initialized = True
+            logger.info("PostgreSQL connection pool initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize PostgreSQL pool: {e}")
+            raise
     
     def _execute_sync(self, sql_query: str):
+        """Execute SQL query synchronously"""
+        self._ensure_initialized()
+        
+        if not self._pool:
+            raise RuntimeError("Database pool not initialized")
+        
         conn = self._pool.getconn()
         try:
             cursor = conn.cursor(cursor_factory=RealDictCursor)
@@ -63,10 +78,12 @@ class PostgresClient:
             self._pool.putconn(conn)
     
     async def execute_query(self, sql_query: str):
+        """Execute SQL query asynchronously"""
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(self._executor, self._execute_sync, sql_query)
 
 
+# Singleton instance - no connection made until first query
 postgres_client = PostgresClient()
 
 

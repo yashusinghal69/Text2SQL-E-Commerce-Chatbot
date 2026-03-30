@@ -8,13 +8,13 @@ async def run_query(question: str):
     initial_state = AgentState(question=question)
     
     # Add recursion limit config to prevent GraphRecursionError
-    config = {"recursion_limit": 50}
+    config = {"recursion_limit": 5}
     
     result = await text2sql_graph.ainvoke(initial_state, config)
     return result
 
 
-async def main():
+async def main_async():
 
     questions = [
         "Hello!",   
@@ -39,5 +39,10 @@ async def main():
             print(f"Error: {result['error']}")
 
 
+def main():
+    """Entry point for uv script"""
+    asyncio.run(main_async())
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(main_async())

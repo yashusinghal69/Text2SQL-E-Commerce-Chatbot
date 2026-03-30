@@ -1,17 +1,21 @@
 [project]
 name = "text-sql-agent"
 version = "0.1.0"
-description = "Add your description here"
+description = "Text-to-SQL Agent with LangGraph and OpenAI"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "kagglehub>=0.4.0",
     "langgraph",
+    "openai>=1.0.0",
     "supabase",
     "pandas",
     "streamlit",
     "python-dotenv",
     "plotly",
     "psycopg2-binary",
-    "google-genai>=1.60.0",
 ]
+
+[project.scripts]
+text2sql-example = "app.text_2_sql.example_usage:main"
+text2sql-notebook = "jupyter:main"

@@ -7,7 +7,6 @@ data_folder = "E-Commerce_Dataset"
 
 os.makedirs(data_folder, exist_ok=True)
  
-
 print(f"\nDownloading files to '{data_folder}' folder")
 for item in os.listdir(path):
     source = os.path.join(path, item)
